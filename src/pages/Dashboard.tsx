@@ -1,14 +1,15 @@
 // src/components/Dashboard.tsx
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { Container, Typography, Button } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserByID } from "@/services";
+import { UserContext } from "@/context/UserContext";
 
 const Dashboard: React.FC = () => {
+  const { user, setUser, addAddress } = useContext(UserContext);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const id = localStorage.getItem("id");
-  const [name, setName] = useState("");
 
   useEffect(() => {
     if (!token) {
@@ -17,9 +18,9 @@ const Dashboard: React.FC = () => {
     }
 
     const getUser = async () => {
-      const response = await getUserByID(id);
+      const { name, email, phone, document, addresses } = await getUserByID(id);
 
-      setName(response.name);
+      setUser({ ...user, name, email, phone, document, addresses });
     };
 
     getUser();
@@ -28,7 +29,7 @@ const Dashboard: React.FC = () => {
   return (
     <Container>
       <Typography variant="h4">
-        Bem-vindo {name}! O que deseja fazer hoje?
+        Bem-vindo {user.name}! O que deseja fazer hoje?
       </Typography>
       <Button
         variant="contained"

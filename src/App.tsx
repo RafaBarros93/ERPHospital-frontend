@@ -1,14 +1,16 @@
 import React from "react";
 import Routes from "./routes";
-import Menu from "./components/Menu";
+import Menu from "@/pages/Menu";
 import { ThemeProvider } from "@mui/material/styles";
-import theme from "./theme";
+import theme from "@/theme";
 
 const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
-      <Menu />
-      <Routes />
+      <div style={{ display: "grid", padding: "5rem" }}>
+        <Menu />
+        <Routes />
+      </div>
     </ThemeProvider>
   );
 };

@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { UserContext } from "@/context/UserContext";
+import InputMask from "react-input-mask";
 import * as yup from "yup";
 import {
   Container,
@@ -8,19 +10,20 @@ import {
   List,
   ListItem,
   ListItemText,
+  Box,
 } from "@mui/material";
-
-interface Address {
-  zipCode: string;
-  street: string;
-  city: string;
-  state: string;
-}
+import { createUser } from "@/services";
+import { Address } from "@/interfaces/IAddress.Interfaces";
+import { useNavigate } from "react-router-dom";
 
 const EditUser: React.FC = () => {
-  const [name, setName] = useState("João da Silva");
-  const [email, setEmail] = useState("joao@gmail.com");
-  const [phone, setPhone] = useState("(11) 99999-9999");
+  const navigate = useNavigate();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [document, setDocument] = useState("");
+  const [password, setPassword] = useState("");
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [newAddress, setNewAddress] = useState<Address>({
     zipCode: "",
@@ -28,6 +31,7 @@ const EditUser: React.FC = () => {
     city: "",
     state: "",
   });
+
   const [errors, setErrors] = useState<any>({});
 
   const validationSchema = yup.object().shape({
@@ -44,7 +48,7 @@ const EditUser: React.FC = () => {
       .string()
       .matches(/^\(\d{2}\)\s\d{4,5}-\d{4}$/, "Número de telefone inválido")
       .required("Telefone é obrigatório"),
-    cpf: yup
+    document: yup
       .string()
       .matches(/^\d{3}\.\d{3}\.\d{3}\-\d{2}$/, "CPF inválido")
       .required("CPF é obrigatório"),
@@ -79,21 +83,31 @@ const EditUser: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      const data = { name, email, phone, cpf, password };
+      const data = { name, email, phone, document, addresses, password };
       await validationSchema.validate(data, { abortEarly: false });
+
+      await createUser(data);
+
       alert("Dados válidos e salvos com sucesso!");
+      navigate("/login");
     } catch (err: any) {
+      console.log(err);
       const newErrors: any = {};
-      err.inner.forEach((error: any) => {
-        newErrors[error.path] = error.message;
-      });
-      setErrors(newErrors);
+
+      if (err.inner && err.inner.length > 0) {
+        err.inner.forEach((error: any) => {
+          newErrors[error.path] = error.message;
+        });
+        setErrors(newErrors);
+      }
+
+      alert(err);
     }
   };
 
   return (
-    <Container style={{ display: "block" }}>
-      <Typography variant="h4">Editar Dados Cadastrais</Typography>
+    <Container>
+      <Typography variant="h4">Cadastrar Usuário</Typography>
       <TextField
         label="Nome"
         fullWidth
@@ -102,6 +116,26 @@ const EditUser: React.FC = () => {
         onChange={(e) => setName(e.target.value)}
         error={!!errors.name}
         helperText={errors.name}
+      />
+
+      <InputMask
+        mask="999.999.999-99"
+        value={document}
+        onChange={(
+          e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        ) => setDocument(e.target.value)}
+      >
+        {() => <TextField label="CPF" fullWidth margin="normal" />}
+      </InputMask>
+      <TextField
+        label="Senha"
+        fullWidth
+        margin="normal"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        error={!!errors.password}
+        helperText={errors.password}
       />
       <TextField
         label="E-mail"
@@ -112,28 +146,27 @@ const EditUser: React.FC = () => {
         error={!!errors.email}
         helperText={errors.email}
       />
-      <TextField
-        label="Telefone"
-        fullWidth
-        margin="normal"
+      <InputMask
+        mask="(99) 99999-9999"
         value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        error={!!errors.phone}
-        helperText={errors.phone}
-      />
+        onChange={(
+          e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        ) => setPhone(e.target.value)}
+      >
+        {() => <TextField label="Telefone" fullWidth margin="normal" />}
+      </InputMask>
 
       <Typography variant="h6">Endereços</Typography>
 
-      <TextField
-        label="Cep"
-        fullWidth
-        margin="normal"
+      <InputMask
+        mask="99999-999"
         value={newAddress.zipCode}
-        onChange={(e) =>
-          setNewAddress({ ...newAddress, zipCode: e.target.value })
-        }
-        helperText={errors.name}
-      />
+        onChange={(
+          e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        ) => setNewAddress({ ...newAddress, zipCode: e.target.value })}
+      >
+        {() => <TextField label="CEP" fullWidth margin="normal" />}
+      </InputMask>
 
       <TextField
         label="Rua"
